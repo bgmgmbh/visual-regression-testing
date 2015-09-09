@@ -48,6 +48,14 @@ With this distribution comes a demo test. It is located in `tests/demo`. To run 
 
 	node_modules/casperjs/bin/casperjs test tests/demo/testsuite.js
 
+If you get an error: `Fatal: [Errno 2] No such file or directory; did you install phantomjs?` then prepend the commands
+above with `PHANTOMJS_EXECUTABLE=node_modules/casperjs/node_modules/phantomjs/bin/phantomjs` so that they look like
+this:
+
+```
+PHANTOMJS_EXECUTABLE=node_modules/casperjs/node_modules/phantomjs/bin/phantomjs node_modules/casperjs/bin/casperjs test tests/demo/testsuite.js
+```
+
 ### New Custom Testsuites
 
 1. Create a subfolder `tests/mytest`
