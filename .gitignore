@@ -6,5 +6,6 @@ comparisonFailures/*
 
 tests/*
 !/tests/demo/
+!/tests/demo2/
 
 !.gitignore
