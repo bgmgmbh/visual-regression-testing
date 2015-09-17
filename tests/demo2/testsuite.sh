@@ -2,6 +2,7 @@
 
 baseUrl=$1
 urlList=$2
+
 testIdentifier=$(date +"%Y-%m-%d_%H-%M-%S")
 urlCounter=$(grep -v '^#' "$urlList" | wc -l)
 finishedTestsCounter=0

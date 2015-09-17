@@ -23,17 +23,14 @@ Resemble.js analyses and compares images with HTML5 canvas and JavaScript.
 ## Installation
 
 ```
-git clone ssh://git@gitlab.bgm-gmbh.de:20022/bgm/visual-regression-testing.git
+git clone https://github.com/bgmgmbh/visual-regression-testing.git
 cd visual-regression-testing
 sudo npm install
 ```
 
 ### SlimerJS instead of PhantomJS
 
-If you want to use SlimerJS instead of PhantomJS, you have install SlimerJS globally. So you have to execute
-`sudo npm install -g slimerjs`.
-
-If you switch from PhantomJS to SlimerJS you also have to create new comparisonBase-Images!
+When you switch from PhantomJS to SlimerJS you also have to create new comparisonBase-Images!
 
 SlimerJS needs an X-Server or has to be executed with xvfb-run (http://docs.slimerjs.org/current/installation.html#having-a-headless-slimerjs).
 But I haven't found out how this works with PhantomCSS, yet.
@@ -42,19 +39,10 @@ But I haven't found out how this works with PhantomCSS, yet.
 
 Testsuites are located in `tests/`.
 
-### Demo Testsuite
+### Demo Testsuites
 
-With this distribution comes a demo test. It is located in `tests/demo`. To run it execute:
-
-	node_modules/casperjs/bin/casperjs test tests/demo/testsuite.js
-
-If you get an error: `Fatal: [Errno 2] No such file or directory; did you install phantomjs?` then prepend the commands
-above with `PHANTOMJS_EXECUTABLE=node_modules/casperjs/node_modules/phantomjs/bin/phantomjs` so that they look like
-this:
-
-```
-PHANTOMJS_EXECUTABLE=node_modules/casperjs/node_modules/phantomjs/bin/phantomjs node_modules/casperjs/bin/casperjs test tests/demo/testsuite.js
-```
+With this distribution come two demo test. They are located in `tests/demo` and  `tests/demo2`. They have their own 
+READMEs!
 
 ### New Custom Testsuites
 
@@ -62,8 +50,4 @@ PHANTOMJS_EXECUTABLE=node_modules/casperjs/node_modules/phantomjs/bin/phantomjs 
 2. Create a `testfile.js` in `tests/mytest`
 
 Each testsuite should be versionied in it's own git repository. So run `git init` in `tests/mytest` and commit and push
-to a remote repository escpecially for this testsuite
-
-### Existing Custom Testsuites
-
-See the README in the subfolders of `tests/`.
+to a remote repository escpecially for this testsuite.

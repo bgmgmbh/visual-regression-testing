@@ -1,19 +1,21 @@
 # Demo 2 Visual Regression Testing
 
-## Installation
+This is a custom demo with some improvements.
 
-1. Install the Visual Regression Testing Base Distribution. You can find it here: 
-https://gitlab.bgm-gmbh.de/bgm/visual-regression-testing. Follow the install intructions in it's README.
+Images are stored in a folder built from the URL.
+Some Logs are written to comparisonResults/testIdentifier.
+
+To process more than one URL, you should use the testsuite.sh script. Have a look at the needed parameters there.
 
 ## Usage
 
 To start the tests, execute this from the root folder of your Visual Regression Testing Base Distribution:
 
 ```
-#direct call
+# direct call
 node_modules/casperjs/bin/casperjs test tests/demo2/testsuite.js --baseUrl="http://my.url/" --url="to/test"
 
-#using a wrapper script to handle url lists
-# a "#" in the path/to/file/with/urls says: ignore this line
-tests/demo2/testsuite.sh "http://my.url/" "path/to/file/with/urls"
+# using a wrapper script to handle url lists is much more comfortable
+# a "#" in the tests/demo2/urlList says: ignore this line
+tests/demo2/testsuite.sh "http://my.url/" "tests/demo2/urlList"
 ```

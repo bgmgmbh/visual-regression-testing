@@ -1,10 +1,41 @@
+/**
+ * The path for this testsuite below /tests/
+ *
+ * @type {string}
+ * @private
+ */
 var _testsuiteDirectory = 'demo2';
+/**
+ * A title for your testsuite
+ * @type {string}
+ * @private
+ */
 var _testsuiteTitle = 'Demo 2';
-var _baselineImageSuffix = "";
-var _diffImageSuffix = ".diff";
-var _failImageSuffix = ".fail";
-var _addLabelToFailedImage = false;
+/**
+ * The viewport dimensions
+ *
+ * @type {number[]}
+ * @private
+ */
+var _viewport = [1024, 768];
 
+/**
+ * Define the screenshots you want to take here.
+ * The first parameter is a CSS selector, the second parameter is the filename.
+ *
+ * You can also define othere tests or actions to do, before taking the screenshot.
+ */
+function doTests() {
+	casper
+		.then(function () {
+			phantomcss.screenshot('html', '0_fullpage');
+			phantomcss.screenshot('header', '1_header');
+			phantomcss.screenshot('#content', '2_content');
+			phantomcss.screenshot('footer', '3_footer');
+			phantomcss.screenshot('footer .footer-section', '3_footer_footer-section');
+			phantomcss.screenshot('footer .meta-section', '3_footer_meta-section');
+		});
+}
 
 /**
  * DO NOT CHANGE ANYTHING BELOW THIS LINE!
@@ -12,6 +43,12 @@ var _addLabelToFailedImage = false;
 //Include stuff
 var fs = require('fs');
 var phantomcss = require(fs.absolute(fs.workingDirectory + '/phantomcss.js'));
+
+//Some parameters.
+var _baselineImageSuffix = "";
+var _diffImageSuffix = ".diff";
+var _failImageSuffix = ".fail";
+var _addLabelToFailedImage = false;
 
 //Get CLI parameters
 var _baseUrl = casper.cli.get('baseUrl') ? casper.cli.get('baseUrl') : '/';
@@ -36,7 +73,7 @@ var _passedComparisonsLog = fs.absolute(_testDirectory + fs.separator + 'compari
 var _timedoutComparisonsLog = fs.absolute(_testDirectory + fs.separator + 'comparisonResults' + fs.separator + _testIdentifier + fs.separator + 'timedoutComparisons.log');
 var _newComparisonsLog = fs.absolute(_testDirectory + fs.separator + 'comparisonResults' + fs.separator + _testIdentifier + fs.separator + 'newComparisons.log');
 
-casper.test.begin(_testsuiteTitle + ' tests for "' + _url + '"', function (test) {
+casper.test.begin(_testsuiteTitle + ' tests for "' + _baseUrl + _url + '"', function (test) {
 
 	phantomcss.init({
 		casper: casper,
@@ -127,26 +164,12 @@ casper.test.begin(_testsuiteTitle + ' tests for "' + _url + '"', function (test)
 
 	casper
 		.start()
-		.viewport(1024, 768)
-		.thenOpen(_baseUrl + _url)
-		.then(function () {
-			phantomcss.screenshot('html', '0_fullpage');
-		})
-		.then(function () {
-			phantomcss.screenshot('header', '1_header');
-		})
-		.then(function () {
-			phantomcss.screenshot('#content', '2_content');
-		})
-		.then(function () {
-			phantomcss.screenshot('footer', '3_footer');
-		})
-		.then(function () {
-			phantomcss.screenshot('footer .footer-section', '3_footer_footer-section');
-		})
-		.then(function () {
-			phantomcss.screenshot('footer .meta-section', '3_footer_meta-section');
-		})
+		.viewport(_viewport[0], _viewport[1])
+		.thenOpen(_baseUrl + _url);
+
+	doTests();
+
+	casper
 		.then(function now_check_the_screenshots() {
 			phantomcss.compareAll();
 		})
