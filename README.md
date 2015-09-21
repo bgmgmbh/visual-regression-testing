@@ -28,6 +28,8 @@ cd visual-regression-testing
 sudo npm install
 ```
 
+You don't know `npm`? npm is just another package manager: https://www.npmjs.com/
+
 ### SlimerJS instead of PhantomJS
 
 When you switch from PhantomJS to SlimerJS you also have to create new comparisonBase-Images!
@@ -42,12 +44,30 @@ Testsuites are located in `tests/`.
 ### Demo Testsuites
 
 With this distribution come two demo test. They are located in `tests/demo` and  `tests/demo2`. They have their own 
-READMEs!
+READMEs ([Demo 1](tests/demo/README.md), [Demo 2](tests/demo2/README.md))!
 
 ### New Custom Testsuites
 
 1. Create a subfolder `tests/mytest`
 2. Create a `testfile.js` in `tests/mytest`
 
-Each testsuite should be versionied in it's own git repository. So run `git init` in `tests/mytest` and commit and push
+Each testsuite should be versioned in it's own git repository. So run `git init` in `tests/mytest` and commit and push
 to a remote repository escpecially for this testsuite.
+
+## Presentation
+
+* [Presentation](t3cm15_visual_regression_testing.pdf) from the Visual Regression Testing session at the 
+<a href="http://typo3camp-munich.de/">TYPO3 Camp Munich 2015</a>: [t3cm15_visual_regression_testing.pdf](t3cm15_visual_regression_testing.pdf)
+
+## Author
+
+This PhantomCSS distribution was created by Marco Huber and the bgm websolutions development team. 
+
+* <a href="https://twitter.com/mhuber84">@mhuber84</a>
+* mail@marco-huber.de
+* marco.huber@bgm-gmbh.de
+* <a href="http://typo3.bgm-gmbh.de">bgm Websolutions GmbH & Co. KG</a>
+
+PhantomCSS was created by <a href="https://github.com/Huddle/PhantomCSS">James Cryer and the Huddle development team</a>.
+
+Feel free to contribute and send in pull requests or create an issue.

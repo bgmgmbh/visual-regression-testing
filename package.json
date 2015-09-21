@@ -2,12 +2,17 @@
   "name": "visual-regression-testing",
   "version": "0.0.1",
   "description": "Visual regression testing with PhantomCSS",
-  "main": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bgmgmbh/visual-regression-testing.git"
+  },
+  "main": "phantomcss.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "BSD-2-Clause",
+  "license": "MIT",
+  "homepage": "https://github.com/bgmgmbh/visual-regression-testing",
   "devDependencies": {},
   "dependencies": {
     "casperjs": "~1.1.0-beta3",
