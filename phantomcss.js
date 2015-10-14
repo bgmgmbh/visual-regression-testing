@@ -31,6 +31,7 @@ var _resembleContainerPath;
 var _libraryRoot;
 var _rebase = false;
 var _prefixCount = true;
+var _disableNewBase = false;
 
 var _baselineImageSuffix = "";
 var _diffImageSuffix = ".diff";
@@ -87,6 +88,7 @@ function update( options ) {
 	_mismatchTolerance = options.mismatchTolerance || _mismatchTolerance;
 
 	_rebase = typeof options.rebase !== 'undefined' ? options.rebase : _rebase;
+	_disableNewBase = typeof options.disableNewBase !== 'undefined' ? options.disableNewBase : _disableNewBase;
 
 	_resembleOutputSettings = options.outputSettings || _resembleOutputSettings;
 
@@ -247,7 +249,7 @@ function capture( srcPath, resultPath, target ) {
 				copyAndReplaceFile( originalFromSource, originalForResult );
 			}
 
-		} else {
+		} else if (!_disableNewBase) {
 
 			grab( srcPath, target );
 
