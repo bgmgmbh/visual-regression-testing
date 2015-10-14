@@ -82,6 +82,7 @@ function update( options ) {
 	_onTimeout = options.onTimeout || _onTimeout;
 	_onNewImage = options.onNewImage || _onNewImage;
 	_onComplete = options.onComplete || options.report || _onComplete;
+	_onScreenshotCaptureFailed = options.onScreenshotCaptureFailed || _onScreenshotCaptureFailed;
 
 	_hideElements = options.hideElements;
 
@@ -264,7 +265,11 @@ function capture( srcPath, resultPath, target ) {
 		}
 
 	} catch ( ex ) {
-		console.log( "[PhantomCSS] Screenshot capture failed: " + ex.message );
+		_onScreenshotCaptureFailed(
+			{
+				filename: resultPath
+			},
+			ex.message);
 	}
 }
 
@@ -618,6 +623,11 @@ function _onTimeout( test ) {
 function _onNewImage( test ) {
 	console.log( '\n' );
 	casper.test.info( 'New screenshot at ' + test.filename );
+}
+
+function _onScreenshotCaptureFailed( test, msg ) {
+	console.log( '\n' );
+	casper.test.info( 'Screenshot capture failed: ' + msg );
 }
 
 function _onComplete( tests, noOfFails, noOfErrors ) {
