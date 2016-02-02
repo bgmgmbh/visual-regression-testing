@@ -27,7 +27,7 @@ var _viewport = [1024, 768];
  */
 function doTests() {
 	casper
-		.then(function () {
+		.then(function doScreenshots() {
 			phantomcss.screenshot('html', '0_fullpage');
 			phantomcss.screenshot('header', '1_header');
 			phantomcss.screenshot('#content', '2_content');
@@ -49,6 +49,7 @@ var _baselineImageSuffix = "";
 var _diffImageSuffix = ".diff";
 var _failImageSuffix = ".fail";
 var _addLabelToFailedImage = false;
+var _timeout = 30000;
 
 //Get CLI parameters
 var _baseUrl = casper.cli.get('baseUrl') ? casper.cli.get('baseUrl') : '/';
@@ -61,6 +62,7 @@ if (casper.cli.get('testIdentifier')) {
 }
 var _urlCounter = casper.cli.get('urlCounter') ? casper.cli.get('urlCounter') : 1;
 var _finishedTestsCounter = casper.cli.get('finishedTestsCounter') ? casper.cli.get('finishedTestsCounter') : 1;
+var _disableNewBase = casper.cli.get('disableNewBase') ? true : false;
 
 //Paths
 var _testDirectory = fs.workingDirectory + fs.separator + 'tests' + fs.separator + _testsuiteDirectory;
@@ -68,12 +70,56 @@ var _screenshotRoot = fs.absolute(_testDirectory + fs.separator + 'comparisonBas
 var _comparisonResultRoot = fs.absolute(_testDirectory + fs.separator + 'comparisonResults' + fs.separator + _testIdentifier + (_url ? fs.separator + _url : ''));
 var _failedComparisonsRoot = fs.absolute(_testDirectory + fs.separator + 'comparisonFailures' + fs.separator + _testIdentifier + (_url ? fs.separator + _url : ''));
 var _executedComparisonsLog = fs.absolute(_testDirectory + fs.separator + 'comparisonResults' + fs.separator + _testIdentifier + fs.separator + 'executedComparisons.log');
+var _executedComparisonsCounterLog = fs.absolute(_testDirectory + fs.separator + 'comparisonResults' + fs.separator + _testIdentifier + fs.separator + 'executedComparisonsCounter.log');
 var _failedComparisonsLog = fs.absolute(_testDirectory + fs.separator + 'comparisonResults' + fs.separator + _testIdentifier + fs.separator + 'failedComparisons.log');
 var _passedComparisonsLog = fs.absolute(_testDirectory + fs.separator + 'comparisonResults' + fs.separator + _testIdentifier + fs.separator + 'passedComparisons.log');
 var _timedoutComparisonsLog = fs.absolute(_testDirectory + fs.separator + 'comparisonResults' + fs.separator + _testIdentifier + fs.separator + 'timedoutComparisons.log');
 var _newComparisonsLog = fs.absolute(_testDirectory + fs.separator + 'comparisonResults' + fs.separator + _testIdentifier + fs.separator + 'newComparisons.log');
+var _casperTimedoutLog = fs.absolute(_testDirectory + fs.separator + 'comparisonResults' + fs.separator + _testIdentifier + fs.separator + 'casperTimedout.log');
+var _screenshotCaptureFailedLog = fs.absolute(_testDirectory + fs.separator + 'comparisonResults' + fs.separator + _testIdentifier + fs.separator + 'screenshotCaptureFailed.log');
 
 casper.test.begin(_testsuiteTitle + ' tests for "' + _baseUrl + _url + '"', function (test) {
+
+	casper.options.stepTimeout = _timeout;
+	casper.options.timeout = _timeout;
+	casper.options.waitTimeout = _timeout;
+	casper.options.retryTimeout = 20;
+	casper.options.onStepTimeout = function onStepTimeout(timeout, stepNum) {
+		var content = '';
+		if (fs.isFile(_casperTimedoutLog)) {
+			content += "\n";
+		} else {
+			fs.touch(_casperTimedoutLog);
+		}
+		content += _baseUrl + _url + '|stepTimeout';
+		fs.write(_casperTimedoutLog, content, 'a');
+
+		casper.die("Maximum step execution timeout exceeded for step " + stepNum);
+	};
+	casper.options.onTimeout = function onTimeout(timeout) {
+		var content = '';
+		if (fs.isFile(_casperTimedoutLog)) {
+			content += "\n";
+		} else {
+			fs.touch(_casperTimedoutLog);
+		}
+		content += _baseUrl + _url + '|scriptTimeout';
+		fs.write(_casperTimedoutLog, content, 'a');
+
+		casper.die(f("Script timeout of %dms reached, exiting.", timeout));
+	};
+	casper.options.onWaitTimeout = function onWaitTimeout(timeout) {
+		var content = '';
+		if (fs.isFile(_casperTimedoutLog)) {
+			content += "\n";
+		} else {
+			fs.touch(_casperTimedoutLog);
+		}
+		content += _baseUrl + _url + '|waitTimeout';
+		fs.write(_casperTimedoutLog, content, 'a');
+
+		casper.die(f("Wait timeout of %dms expired, exiting.", timeout));
+	};
 
 	phantomcss.init({
 		casper: casper,
@@ -84,7 +130,9 @@ casper.test.begin(_testsuiteTitle + ' tests for "' + _baseUrl + _url + '"', func
 		diffImageSuffix: _diffImageSuffix,
 		failImageSuffix: _failImageSuffix,
 		addLabelToFailedImage: _addLabelToFailedImage,
-		fileNameGetter: function (root, fileName) {
+		waitTimeout: _timeout,
+		disableNewBase: _disableNewBase,
+		fileNameGetter: function fileNameGetter (root, fileName) {
 			var name;
 			fileName = fileName || "screenshot";
 
@@ -96,7 +144,7 @@ casper.test.begin(_testsuiteTitle + ' tests for "' + _baseUrl + _url + '"', func
 				return name + _baselineImageSuffix + '.png';
 			}
 		},
-		onPass: function (test) {
+		onPass: function onPass (test) {
 			var content = '';
 			if (fs.isFile(_passedComparisonsLog)) {
 				content += "\n";
@@ -109,20 +157,20 @@ casper.test.begin(_testsuiteTitle + ' tests for "' + _baseUrl + _url + '"', func
 			console.log('\n');
 			casper.test.pass('No changes found for screenshot ' + test.filename);
 		},
-		onFail: function (test) {
+		onFail: function onFail (test) {
 			var content = '';
 			if (fs.isFile(_failedComparisonsLog)) {
 				content += "\n";
 			} else {
 				fs.touch(_failedComparisonsLog);
 			}
-			content += test.filename;
+			content += test.filename + '|' + test.mismatch;
 			fs.write(_failedComparisonsLog, content, 'a');
 
 			console.log('\n');
 			casper.test.fail('Visual change found for screenshot ' + test.filename + ' (' + test.mismatch + '% mismatch)');
 		},
-		onTimeout: function (test) {
+		onTimeout: function onTimeout (test) {
 			var content = '';
 			if (fs.isFile(_timedoutComparisonsLog)) {
 				content += "\n";
@@ -135,7 +183,7 @@ casper.test.begin(_testsuiteTitle + ' tests for "' + _baseUrl + _url + '"', func
 			console.log('\n');
 			casper.test.info('Could not complete image comparison for ' + test.filename);
 		},
-		onNewImage: function (test) {
+		onNewImage: function onNewImage (test) {
 			var content = '';
 			if (fs.isFile(_newComparisonsLog)) {
 				content += "\n";
@@ -147,20 +195,21 @@ casper.test.begin(_testsuiteTitle + ' tests for "' + _baseUrl + _url + '"', func
 
 			console.log('\n');
 			casper.test.info('New screenshot at ' + test.filename);
+		},
+		onScreenshotCaptureFailed: function onScreenshotCaptureFailed (test, msg) {
+			var content = '';
+			if (fs.isFile(_screenshotCaptureFailedLog)) {
+				content += "\n";
+			} else {
+				fs.touch(_screenshotCaptureFailedLog);
+			}
+			content += _baseUrl + _url + '|' + msg;
+			fs.write(_screenshotCaptureFailedLog, content, 'a');
+
+			console.log('\n');
+			casper.test.info('Screenshot capture failed: ' + msg);
 		}
 	});
-
-	casper.on( 'remote.message', function ( msg ) {
-		this.echo( msg );
-	} );
-
-	casper.on( 'error', function ( err ) {
-		this.die( "PhantomJS has errored: " + err );
-	} );
-
-	casper.on( 'resource.error', function ( err ) {
-		casper.log( 'Resource load error: ' + err, 'warning' );
-	} );
 
 	casper
 		.start()
@@ -170,15 +219,24 @@ casper.test.begin(_testsuiteTitle + ' tests for "' + _baseUrl + _url + '"', func
 	doTests();
 
 	casper
-		.then(function now_check_the_screenshots() {
+		.then(function compareScreenshots() {
 			phantomcss.compareAll();
 		})
 		.run(function () {
 			var content = '';
-			if (!fs.isFile(_executedComparisonsLog)) {
+			if (!fs.isFile(_executedComparisonsCounterLog)) {
+				fs.touch(_executedComparisonsCounterLog);
+			}
+			fs.write(_executedComparisonsCounterLog, _finishedTestsCounter + '/' + _urlCounter, 'w');
+
+			var content = '';
+			if (fs.isFile(_executedComparisonsLog)) {
+				content += "\n";
+			} else {
 				fs.touch(_executedComparisonsLog);
 			}
-			fs.write(_executedComparisonsLog, _finishedTestsCounter + '/' + _urlCounter, 'w');
+			content += _baseUrl + _url;
+			fs.write(_executedComparisonsLog, content, 'a');
 
 			console.log('\nTHE END.');
 			casper.test.done();

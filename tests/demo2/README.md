@@ -12,10 +12,15 @@ To process more than one URL, you should use the testsuite.sh script. Have a loo
 To start the tests, execute this from the root folder of your Visual Regression Testing Base Distribution:
 
 ```
-# direct call
-node_modules/casperjs/bin/casperjs test tests/demo2/testsuite.js --baseUrl="http://my.url/" --url="to/test"
+# Direct call:
+# --disableNewBase is optional
+node_modules/casperjs/bin/casperjs test tests/demo2/testsuite.js --baseUrl="http://my.url/" --url="to/test" --disableNewBase="true"
 
-# using a wrapper script to handle url lists is much more comfortable
-# a "#" in the tests/demo2/urlList says: ignore this line
-tests/demo2/testsuite.sh "http://my.url/" "tests/demo2/urlList"
+# Using a wrapper script to handle url lists is much more comfortable.
+# A "#" in the tests/demo2/urlList says: ignore this line.
+# first parameter: baseUrl - the urls from the urlList are prepended with this base url.
+# second parameter: urlList - path to a list with urls to test.
+# third parameter: testIdentifier - a speaking name for this test. It get's prepended with the current date and time. Use only chars wich are allowed as directory name.
+# fourth parameter: disableNewBase (optional) - normally a base image gets created, if none is found. You can prevent this behaviour with setting this parameter.
+tests/demo2/testsuite.sh "http://my.url/" "tests/demo2/urlList" myidentifier yes
 ```
