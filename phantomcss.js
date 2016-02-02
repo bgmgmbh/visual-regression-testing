@@ -31,6 +31,7 @@ var _resembleContainerPath;
 var _libraryRoot;
 var _rebase = false;
 var _prefixCount = true;
+var _isCount = true;
 var _disableNewBase = false;
 
 var _baselineImageSuffix = "";
@@ -76,6 +77,7 @@ function update( options ) {
 	_fileNameGetter = options.fileNameGetter || _fileNameGetter;
 
 	_prefixCount = options.prefixCount || _prefixCount;
+	_isCount = options.isCount || _isCount;
 
 	_onPass = options.onPass || _onPass;
 	_onFail = options.onFail || _onFail;
@@ -122,7 +124,10 @@ function getResemblePath( root ) {
 	if ( !_isFile( path ) ) {
 		path = [ root, 'node_modules', 'resemblejs', 'resemble.js' ].join( fs.separator );
 		if ( !_isFile( path ) ) {
-			throw "[PhantomCSS] Resemble.js not found: " + path;
+            path = [ root, '..', 'resemblejs', 'resemble.js' ].join( fs.separator );
+            if ( !_isFile( path ) ) {
+    			throw "[PhantomCSS] Resemble.js not found: " + path;
+            }
 		}
 	}
 
@@ -156,12 +161,22 @@ function turnOffAnimations() {
 function _fileNameGetter( root, fileName ) {
 	var name;
 
+	// If no iterator, enforce filename.
+	if ( !_isCount && !fileName ) {
+		throw 'Filename is required when addIteratorToImage option is false.';
+	}
+
 	fileName = fileName || "screenshot";
 
-	if (_prefixCount) {
-		name = root + fs.separator + _count++ + "_" + fileName;
+	if ( !_isCount ) {
+		name = root + fs.separator + fileName;
+		_count++;
 	} else {
-		name = root + fs.separator + fileName + "_" + _count++;
+		if ( _prefixCount ) {
+			name = root + fs.separator + _count++ + "_" + fileName;
+		} else {
+			name = root + fs.separator + fileName + "_" + _count++;
+		}
 	}
 
 	if ( _isFile( name + _baselineImageSuffix + '.png' ) ) {

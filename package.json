@@ -15,10 +15,10 @@
   "homepage": "https://github.com/bgmgmbh/visual-regression-testing",
   "devDependencies": {},
   "dependencies": {
-    "casperjs": "~1.1.0-beta3",
-    "phantomjs": "~1.9.18",
-    "slimerjs": "~0.9.6",
-    "phantomcss": "~0.10.4",
-    "resemblejs": "~1.3.0"
+    "casperjs": "https://github.com/n1k0/casperjs/tarball/master",
+    "phantomjs": "~2.1.x",
+    "slimerjs": "~0.9.x",
+    "phantomcss": "~0.11.x",
+    "resemblejs": "~2.1.x"
   }
 }
