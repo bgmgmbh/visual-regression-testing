@@ -58,6 +58,11 @@ to a remote repository escpecially for this testsuite.
 
 * [Presentation](t3cm15_visual_regression_testing.pdf) from the Visual Regression Testing session at the 
 <a href="http://typo3camp-munich.de/">TYPO3 Camp Munich 2015</a>: [t3cm15_visual_regression_testing.pdf](t3cm15_visual_regression_testing.pdf)
+* [Testsuite](test/mtug-20160202) from my presentation at the <a href="http://mtug.de/">Munich TYPO3 Usergroup</a> at 2016-02-02
+
+## Links
+
+See also https://github.com/bgmgmbh/extension-bgm_vrt
 
 ## Author
 
