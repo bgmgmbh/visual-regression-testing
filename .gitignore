@@ -7,5 +7,6 @@ comparisonFailures/*
 tests/*
 !/tests/demo/
 !/tests/demo2/
+!/tests/mtug-20160202/
 
 !.gitignore
