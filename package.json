@@ -1,6 +1,6 @@
 {
   "name": "visual-regression-testing",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Visual regression testing with PhantomCSS",
   "repository": {
     "type": "git",
@@ -15,10 +15,9 @@
   "homepage": "https://github.com/bgmgmbh/visual-regression-testing",
   "devDependencies": {},
   "dependencies": {
-    "casperjs": "https://github.com/n1k0/casperjs/tarball/master",
-    "phantomjs": "~2.1.x",
-    "slimerjs": "~0.9.x",
-    "phantomcss": "~0.11.x",
-    "resemblejs": "~2.1.x"
+    "phantomcss": "~1.1.x",
+    "phantomjs-prebuilt": "^2.1.4",
+    "casperjs": "^1.1.2",
+    "resemblejs": "^2.2.0"
   }
 }

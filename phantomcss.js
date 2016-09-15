@@ -1,5 +1,5 @@
 /*
-James Cryer / Huddle / 2015
+James Cryer / Huddle / 2016
 https://github.com/Huddle/PhantomCSS
 http://tldr.huddle.com/blog/css-testing/
 */
@@ -13,14 +13,10 @@ var _results = '.' + fs.separator + 'comparisonResults' + fs.separator + current
 var _failures = '.' + fs.separator + 'comparisonFailures' + fs.separator + currentDate.toISOString();
 
 var _count = 0;
-var _realPath;
-var _diffsToProcess = [];
 var exitStatus;
 var _hideElements;
 var _waitTimeout = 60000;
 var _addLabelToFailedImage = true;
-var _test_match;
-var _test_exclude;
 var _mismatchTolerance = 0.05;
 var _resembleOutputSettings;
 var _cleanupComparisonImages = false;
@@ -37,6 +33,8 @@ var _disableNewBase = false;
 var _baselineImageSuffix = "";
 var _diffImageSuffix = ".diff";
 var _failureImageSuffix = ".fail";
+
+var _captureWaitEnabled = true;
 
 exports.screenshot = screenshot;
 exports.compareAll = compareAll;
@@ -64,11 +62,11 @@ function update( options ) {
 
 	_waitTimeout = options.waitTimeout || _waitTimeout;
 
-	_libraryRoot = options.libraryRoot || _libraryRoot || '.';
+	_libraryRoot = options.libraryRoot;
 
 	_resemblePath = _resemblePath || getResemblePath( _libraryRoot );
 
-	_resembleContainerPath = _resembleContainerPath || ( _libraryRoot + fs.separator + 'Resources' + fs.separator + 'resemblejscontainer.html' );
+	_resembleContainerPath = _resembleContainerPath || getResembleContainerPath( _libraryRoot + fs.separator + 'Resources' );
 
 	_src = stripslash( options.screenshotRoot || _src );
 	_results = stripslash( options.comparisonResultRoot || _results || _src );
@@ -77,7 +75,7 @@ function update( options ) {
 	_fileNameGetter = options.fileNameGetter || _fileNameGetter;
 
 	_prefixCount = options.prefixCount || _prefixCount;
-	_isCount = options.isCount || _isCount;
+	_isCount = ( options.addIteratorToImage !== false );
 
 	_onPass = options.onPass || _onPass;
 	_onFail = options.onFail || _onFail;
@@ -90,8 +88,8 @@ function update( options ) {
 
 	_mismatchTolerance = options.mismatchTolerance || _mismatchTolerance;
 
-	_rebase = typeof options.rebase !== 'undefined' ? options.rebase : _rebase;
-	_disableNewBase = typeof options.disableNewBase !== 'undefined' ? options.disableNewBase : _disableNewBase;
+	_rebase = isNotUndefined(options.rebase) ? options.rebase : _rebase;
+	_disableNewBase = isNotUndefined(options.disableNewBase) ? options.disableNewBase : _disableNewBase;
 
 	_resembleOutputSettings = options.outputSettings || _resembleOutputSettings;
 
@@ -101,6 +99,8 @@ function update( options ) {
 	_diffImageSuffix = options.diffImageSuffix || _diffImageSuffix;
 	_failureImageSuffix = options.failureImageSuffix || _failureImageSuffix;
 
+	_captureWaitEnabled = isNotUndefined(options.captureWaitEnabled) ? options.captureWaitEnabled : _captureWaitEnabled;
+
 	if ( options.addLabelToFailedImage !== undefined ) {
 		_addLabelToFailedImage = options.addLabelToFailedImage;
 	}
@@ -108,6 +108,10 @@ function update( options ) {
 	if ( _cleanupComparisonImages ) {
 		_results += fs.separator + generateRandomString();
 	}
+}
+
+function isNotUndefined(val){
+	return val !== void 0;
 }
 
 function init( options ) {
@@ -119,16 +123,47 @@ function done(){
 }
 
 function getResemblePath( root ) {
+    var path;
 
-	var path = [ root, 'libs', 'resemblejs', 'resemble.js' ].join( fs.separator );
-	if ( !_isFile( path ) ) {
+	if(root){
 		path = [ root, 'node_modules', 'resemblejs', 'resemble.js' ].join( fs.separator );
 		if ( !_isFile( path ) ) {
             path = [ root, '..', 'resemblejs', 'resemble.js' ].join( fs.separator );
+		}
+	} else {
+		require('resemblejs');
+		for(var c in require.cache) {
+			if(/resemblejs/.test(c)) {
+				path = require.cache[c].filename;
+				break;
+			}
+		}
+	}
+
             if ( !_isFile( path ) ) {
     			throw "[PhantomCSS] Resemble.js not found: " + path;
             }
+
+    return path;
+}
+
+
+function getResembleContainerPath(root) {
+    var path;
+
+	if(root){
+		path = root + fs.separator + 'resemblejscontainer.html';
+	} else {
+		for (var c in require.cache) {
+			if (/phantomcss/.test(c)) {
+				path = require.cache[c].filename.replace('phantomcss.js', 'resemblejscontainer.html');
+				break;
+			}
 		}
+	}
+
+    if ( !_isFile(path) ) {
+        throw '[PhantomCSS] Can\'t find Resemble container. (' + path + ')';
 	}
 
 	return path;
@@ -360,42 +395,28 @@ function asyncCompare( one, two, func ) {
 	);
 }
 
-function getDiffs( path ) {
-
-	var filePath;
-
-	if ( ( {
-			'..': 1,
-			'.': 1
-		} )[ path ] ) {
-		return true;
+function getDiffs( root, collection ) {
+	var symDict = { '..': 1, '.': 1};
+	if(!collection) {collection = [];}
+	if ( fs.isDirectory( root ) ) {
+		fs.list( root ).forEach( function(leaf){
+			var newroot = root + fs.separator + leaf;
+			if ( symDict[ leaf ] ) { return true; }
+			getDiffs(newroot, collection);
+		} );
+	} else if ( isThisImageADiff( root.toLowerCase() ) ) {
+		collection.push( root );
+	}
+	return collection;
 	}
 
-	if ( _realPath ) {
-		_realPath += fs.separator + path;
-	} else {
-		_realPath = path;
-	}
-
-	filePath = _realPath;
-
-	if ( fs.isDirectory( _realPath ) ) {
-		fs.list( _realPath ).forEach( getDiffs );
-	} else if ( isThisImageADiff( path.toLowerCase() ) ) {
-		if ( _test_match ) {
-			if ( _test_match.test( _realPath.toLowerCase() ) ) {
-				if ( !( _test_exclude && _test_exclude.test( _realPath.toLowerCase() ) ) ) {
-					console.log( '[PhantomCSS] Analysing ' + _realPath );
-					_diffsToProcess.push( filePath );
+function filterOn(include, exclude){
+	return function(path){
+		var includeAble = (include === void 0) || include.test( path.toLowerCase() );
+		var excludeAble = exclude && exclude.test( path.toLowerCase() );
+		return !excludeAble && includeAble;
 				}
 			}
-		} else if ( !( _test_exclude && _test_exclude.test( _realPath.toLowerCase() ) ) ) {
-			_diffsToProcess.push( filePath );
-		}
-	}
-
-	_realPath = _realPath.replace( fs.separator + path, '' );
-}
 
 function getCreatedDiffFiles() {
 	var d = diffsCreated;
@@ -405,8 +426,7 @@ function getCreatedDiffFiles() {
 
 function compareMatched( match, exclude ) {
 	// Search for diff images, but only compare matched filenames
-	_test_match = typeof match === 'string' ? new RegExp( match ) : match;
-	compareAll( exclude );
+	compareAll( exclude, void 0, match);
 }
 
 function compareExplicit( list ) {
@@ -428,13 +448,8 @@ function compareFiles( baseFile, file ) {
 		test.error = true;
 	} else {
 
-		if ( !_isFile( _resembleContainerPath ) ) {
-			console.log( '[PhantomCSS] Can\'t find Resemble container. Perhaps the library root is mis configured. (' + _resembleContainerPath + ')' );
-			test.error = true;
-			return;
-		}
-
-		casper.thenOpen( _resembleContainerPath, function () {
+		casper.thenOpen( 'about:blank', function () {}); // reset page (fixes bug where failure screenshots leak between captures)
+		casper.thenOpen( 'file:///' + _resembleContainerPath, function () {
 
 			asyncCompare( baseFile, file, function ( isSame, mismatch ) {
 
@@ -502,22 +517,26 @@ function compareFiles( baseFile, file ) {
 	return test;
 }
 
-function compareAll( exclude, list ) {
+function str2RegExp(str){
+	return typeof str === 'string' ? new RegExp( str ) : str;
+}
+
+function compareAll( exclude, diffList, include ) {
 	var tests = [];
 
-	_test_exclude = typeof exclude === 'string' ? new RegExp( exclude ) : exclude;
-
-	if ( list ) {
-		_diffsToProcess = list;
-	} else {
-		_realPath = undefined;
-		getDiffs( _results );
+	if ( !diffList ) {
+		diffList = getDiffs( _results );
+		if(exclude || include){
+			diffList = diffList.filter(filterOn( str2RegExp(include), str2RegExp(exclude) ));
+		}
+		//diffList.forEach(function(path){console.log( '[PhantomCSS] Attempting visual comparison of ' + path );})
 	}
 
-	_diffsToProcess.forEach( function ( file ) {
+	diffList.forEach( function ( file ) {
 		var baseFile = _replaceDiffSuffix( file );
 		tests.push( compareFiles( baseFile, file ) );
 	} );
+
 	waitForTests( tests );
 }
 
@@ -678,12 +697,10 @@ function _onComplete( tests, noOfFails, noOfErrors ) {
 }
 
 function waitAndHideToCapture( target, fileName, hideSelector, timeToWait ) {
-
-	casper.wait( timeToWait || 250, function () {
-
 		var srcPath = _fileNameGetter( _src, fileName );
 		var resultPath = srcPath.replace( _src, _results );
 
+	function runCapture() {
 		if ( hideSelector || _hideElements ) {
 			casper.evaluate( setVisibilityToHidden, {
 				s1: _hideElements,
@@ -692,8 +709,12 @@ function waitAndHideToCapture( target, fileName, hideSelector, timeToWait ) {
 		}
 
 		capture( srcPath, resultPath, target );
-
-	} ); // give a bit of time for all the images appear
+	}
+	if(_captureWaitEnabled) {
+		casper.wait(timeToWait || 250, runCapture); // give a bit of time for all the images appear
+	} else {
+		runCapture();
+	}
 }
 
 function setVisibilityToHidden( s1, s2 ) {

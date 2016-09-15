@@ -11,9 +11,9 @@ node_modules/casperjs/bin/casperjs test tests/demo/testsuite.js
 ```
 
 If you get an error: `Fatal: [Errno 2] No such file or directory; did you install phantomjs?` then prepend the commands
-above with `PHANTOMJS_EXECUTABLE=node_modules/phantomjs/bin/phantomjs` so that they look like
+above with `PHANTOMJS_EXECUTABLE=node_modules/phantomjs-prebuilt/bin/phantomjs` so that they look like
 this:
 
 ```
-PHANTOMJS_EXECUTABLE=node_modules/phantomjs/bin/phantomjs node_modules/casperjs/bin/casperjs test tests/demo/testsuite.js
+PHANTOMJS_EXECUTABLE=node_modules/phantomjs-prebuilt/bin/phantomjs node_modules/casperjs/bin/casperjs test tests/demo/testsuite.js
 ```

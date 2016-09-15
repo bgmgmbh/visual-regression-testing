@@ -7,7 +7,6 @@ Some Logs are written to comparisonResults/testIdentifier.
 
 To process more than one URL, you should use the testsuite.sh script. Have a look at the needed parameters there.
 
-
 ## Usage
 
 To start the tests, execute this from the root folder of your Visual Regression Testing Base Distribution:

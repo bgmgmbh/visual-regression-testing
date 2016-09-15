@@ -123,6 +123,7 @@ casper.test.begin(_testsuiteTitle + ' tests for "' + _baseUrl + _url + '"', func
 
 	phantomcss.init({
 		casper: casper,
+		libraryRoot: fs.absolute(fs.workingDirectory + ''),
 		screenshotRoot: _screenshotRoot,
 		comparisonResultRoot: _comparisonResultRoot,
 		failedComparisonsRoot: _failedComparisonsRoot,
@@ -132,18 +133,6 @@ casper.test.begin(_testsuiteTitle + ' tests for "' + _baseUrl + _url + '"', func
 		addLabelToFailedImage: _addLabelToFailedImage,
 		waitTimeout: _timeout,
 		disableNewBase: _disableNewBase,
-		fileNameGetter: function fileNameGetter (root, fileName) {
-			var name;
-			fileName = fileName || "screenshot";
-
-			name = root + fs.separator + fileName;
-
-			if (_isFile(name + _baselineImageSuffix + '.png')) {
-				return name + _diffImageSuffix + '.png';
-			} else {
-				return name + _baselineImageSuffix + '.png';
-			}
-		},
 		onPass: function onPass (test) {
 			var content = '';
 			if (fs.isFile(_passedComparisonsLog)) {
@@ -242,16 +231,3 @@ casper.test.begin(_testsuiteTitle + ' tests for "' + _baseUrl + _url + '"', func
 			casper.test.done();
 		});
 } );
-
-function _isFile(path) {
-	var exists = false;
-	try {
-		exists = fs.isFile(path);
-	} catch (e) {
-		if (e.name !== 'NS_ERROR_FILE_TARGET_DOES_NOT_EXIST' && e.name !== 'NS_ERROR_FILE_NOT_FOUND') {
-			// We weren't expecting this exception
-			throw e;
-		}
-	}
-	return exists;
-}

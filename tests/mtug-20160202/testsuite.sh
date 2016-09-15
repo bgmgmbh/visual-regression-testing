@@ -18,7 +18,7 @@ grep -v '^#' "$urlList"| while IFS=$'\n' read urlToTest; do
 
 	#node_modules/casperjs/bin/casperjs --verbose="true" --log-level="debug" test tests/mtug-20160202/testsuite.js --baseUrl="$baseUrl" --url="$urlToTest" --testIdentifier="$testIdentifier" --urlCounter="$urlCounter" --finishedTestsCounter="$finishedTestsCounter" --disableNewBase="$disableNewBase" < /dev/null
 
-	PHANTOMJS_EXECUTABLE=node_modules/phantomjs/bin/phantomjs node_modules/casperjs/bin/casperjs test tests/mtug-20160202/testsuite.js --baseUrl="$baseUrl" --url="$urlToTest" --testIdentifier="$testIdentifier" --urlCounter="$urlCounter" --finishedTestsCounter="$finishedTestsCounter" --disableNewBase="$disableNewBase" < /dev/null
+	PHANTOMJS_EXECUTABLE=node_modules/phantomjs-prebuilt/bin/phantomjs node_modules/casperjs/bin/casperjs test tests/mtug-20160202/testsuite.js --baseUrl="$baseUrl" --url="$urlToTest" --testIdentifier="$testIdentifier" --urlCounter="$urlCounter" --finishedTestsCounter="$finishedTestsCounter" --disableNewBase="$disableNewBase" < /dev/null
 	#SLIMERJS_EXECUTABLE=node_modules/slimerjs/bin/slimerjs node_modules/casperjs/bin/casperjs test tests/mtug-20160202/testsuite.js --baseUrl="$baseUrl" --url="$urlToTest" --testIdentifier="$testIdentifier" --urlCounter="$urlCounter" --finishedTestsCounter="$finishedTestsCounter" --disableNewBase="$disableNewBase" --engine="slimerjs" < /dev/null
 
 	echo "Tested $finishedTestsCounter of $urlCounter URLs"
