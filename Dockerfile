@@ -1,4 +1,4 @@
-FROM node:argon
+FROM node:onbuild
 
 MAINTAINER Marco Huber <marco.huber@bgm-gmbh.de>
 
