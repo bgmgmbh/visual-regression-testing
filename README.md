@@ -54,6 +54,20 @@ READMEs ([Demo 1](tests/demo/README.md), [Demo 2](tests/demo2/README.md))!
 Each testsuite should be versioned in it's own git repository. So run `git init` in `tests/mytest` and commit and push
 to a remote repository escpecially for this testsuite.
 
+## Docker
+
+I didn't upload an image to docker hub, but you can create your own image from the docker file. For more informations have a look at the [docker documentation](https://docs.docker.com/engine/getstarted/step_four/#/step-2-build-an-image-from-your-dockerfile)
+
+```
+docker build -t phantomcss-image .
+```
+
+Then run
+
+```
+docker run --rm --name phantomcss-daemon -v $PWD/tests:/usr/src/app/tests phantomcss-image tests/demo/testsuite.js
+```
+
 ## Presentation
 
 * [Presentation](t3cm15_visual_regression_testing.pdf) from the Visual Regression Testing session at the 
