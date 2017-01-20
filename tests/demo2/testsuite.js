@@ -61,7 +61,7 @@ if (casper.cli.get('testIdentifier')) {
 	_testIdentifier = (new Date()).toISOString();
 }
 var _urlCounter = casper.cli.get('urlCounter') ? casper.cli.get('urlCounter') : 1;
-var _finishedTestsCounter = casper.cli.get('finishedTestsCounter') ? casper.cli.get('finishedTestsCounter') : 1;
+var _finishedTestsCounter = casper.cli.get('finishedTestsCounter') ? casper.cli.get('finishedTestsCounter') : 0;
 var _disableNewBase = casper.cli.get('disableNewBase') ? true : false;
 
 //Paths
