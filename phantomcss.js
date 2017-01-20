@@ -64,9 +64,9 @@ function update( options ) {
 
 	_libraryRoot = options.libraryRoot;
 
-	_resemblePath = _resemblePath || getResemblePath( _libraryRoot );
+	_resemblePath = options.resemblePath || _resemblePath || getResemblePath( _libraryRoot );
 
-	_resembleContainerPath = _resembleContainerPath || getResembleContainerPath( _libraryRoot + fs.separator + 'Resources' );
+	_resembleContainerPath = options.resembleContainerPath || _resembleContainerPath || getResembleContainerPath( _libraryRoot + fs.separator + 'Resources' );
 
 	_src = stripslash( options.screenshotRoot || _src );
 	_results = stripslash( options.comparisonResultRoot || _results || _src );
