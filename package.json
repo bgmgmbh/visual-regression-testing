@@ -15,6 +15,7 @@
   "homepage": "https://github.com/bgmgmbh/visual-regression-testing",
   "devDependencies": {},
   "dependencies": {
+    "canvas": "^1.6.7",
     "phantomcss": "~1.1.x",
     "phantomjs-prebuilt": "^2.1.14",
     "casperjs": "^1.1.3",
