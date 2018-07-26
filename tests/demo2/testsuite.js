@@ -55,6 +55,7 @@ var _failOnCaptureError = true;
 //Get CLI parameters
 var _baseUrl = casper.cli.get('baseUrl') ? casper.cli.get('baseUrl') : '/';
 var _url = casper.cli.get('url');
+var _sanitizedUrl = _url.length > 0 ? phantomcss.sanitize(_url, '_') : _url;
 var _testIdentifier;
 if (casper.cli.get('testIdentifier')) {
 	_testIdentifier = casper.cli.get('testIdentifier');
@@ -67,9 +68,9 @@ var _disableNewBase = casper.cli.get('disableNewBase') ? true : false;
 
 //Paths
 var _testDirectory = fs.workingDirectory + fs.separator + 'tests' + fs.separator + _testsuiteDirectory;
-var _screenshotRoot = fs.absolute(_testDirectory + fs.separator + 'comparisonBase' + (_url ? fs.separator + _url : ''));
-var _comparisonResultRoot = fs.absolute(_testDirectory + fs.separator + 'comparisonResults' + fs.separator + _testIdentifier + (_url ? fs.separator + _url : ''));
-var _failedComparisonsRoot = fs.absolute(_testDirectory + fs.separator + 'comparisonFailures' + fs.separator + _testIdentifier + (_url ? fs.separator + _url : ''));
+var _screenshotRoot = fs.absolute(_testDirectory + fs.separator + 'comparisonBase' + (_url ? fs.separator + _sanitizedUrl : ''));
+var _comparisonResultRoot = fs.absolute(_testDirectory + fs.separator + 'comparisonResults' + fs.separator + _testIdentifier + (_url ? fs.separator + _sanitizedUrl : ''));
+var _failedComparisonsRoot = fs.absolute(_testDirectory + fs.separator + 'comparisonFailures' + fs.separator + _testIdentifier + (_url ? fs.separator + _sanitizedUrl : ''));
 var _executedComparisonsLog = fs.absolute(_testDirectory + fs.separator + 'comparisonResults' + fs.separator + _testIdentifier + fs.separator + 'executedComparisons.log');
 var _executedComparisonsCounterLog = fs.absolute(_testDirectory + fs.separator + 'comparisonResults' + fs.separator + _testIdentifier + fs.separator + 'executedComparisonsCounter.log');
 var _failedComparisonsLog = fs.absolute(_testDirectory + fs.separator + 'comparisonResults' + fs.separator + _testIdentifier + fs.separator + 'failedComparisons.log');

@@ -50,6 +50,7 @@ exports.update = update;
 exports.turnOffAnimations = turnOffAnimations;
 exports.getExitStatus = getExitStatus;
 exports.getCreatedDiffFiles = getCreatedDiffFiles;
+exports.sanitize = sanitize;
 
 function update( options ) {
 
@@ -760,4 +761,28 @@ function getExitStatus() {
 
 function generateRandomString() {
 	return ( Math.random() + 1 ).toString( 36 ).substring( 7 );
+}
+
+/**
+ * Sanitize filename
+ *
+ * Based on https://www.npmjs.com/package/sanitize-filename but without truncate-utf8-bytes because it always fails
+ *
+ * @param input
+ * @param replacement
+ * @returns {*}
+ */
+function sanitize(input, replacement) {
+	var illegalRe = /[\/\?<>\\:\*\|":]/g;
+	var controlRe = /[\x00-\x1f\x80-\x9f]/g;
+	var reservedRe = /^\.+$/;
+	var windowsReservedRe = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i;
+	var windowsTrailingRe = /[\. ]+$/;
+	var sanitized = input
+		.replace(illegalRe, replacement)
+		.replace(controlRe, replacement)
+		.replace(reservedRe, replacement)
+		.replace(windowsReservedRe, replacement)
+		.replace(windowsTrailingRe, replacement);
+	return sanitized;
 }
