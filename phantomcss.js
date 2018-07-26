@@ -18,8 +18,9 @@ var _hideElements;
 var _waitTimeout = 60000;
 var _addLabelToFailedImage = true;
 var _mismatchTolerance = 0.05;
-var _resembleOutputSettings;
+var _resembleOutputSettings = {};
 var _cleanupComparisonImages = false;
+var _failOnCaptureError = true;
 var diffsCreated = [];
 
 var _resemblePath;
@@ -69,7 +70,7 @@ function update( options ) {
 	_resembleContainerPath = options.resembleContainerPath || _resembleContainerPath || getResembleContainerPath( _libraryRoot + fs.separator + 'Resources' );
 
 	_src = stripslash( options.screenshotRoot || _src );
-	_results = stripslash( options.comparisonResultRoot || _results || _src );
+	_results = stripslash( options.comparisonResultRoot || options.screenshotRoot || _results || _src );
 	_failures = options.failedComparisonsRoot === false ? false : stripslash( options.failedComparisonsRoot || _failures );
 
 	_fileNameGetter = options.fileNameGetter || _fileNameGetter;
@@ -84,14 +85,18 @@ function update( options ) {
 	_onComplete = options.onComplete || options.report || _onComplete;
 	_onScreenshotCaptureFailed = options.onScreenshotCaptureFailed || _onScreenshotCaptureFailed;
 
+	_failOnCaptureError = options.failOnCaptureError || _failOnCaptureError;
+
 	_hideElements = options.hideElements;
 
-	_mismatchTolerance = options.mismatchTolerance || _mismatchTolerance;
+	_mismatchTolerance = isNaN(options.mismatchTolerance) ? _mismatchTolerance : options.mismatchTolerance;
 
 	_rebase = isNotUndefined(options.rebase) ? options.rebase : _rebase;
 	_disableNewBase = isNotUndefined(options.disableNewBase) ? options.disableNewBase : _disableNewBase;
 
 	_resembleOutputSettings = options.outputSettings || _resembleOutputSettings;
+
+	_resembleOutputSettings.useCrossOrigin=false; // turn off x-origin attr in Resemble to support SlimerJS
 
 	_cleanupComparisonImages = options.cleanupComparisonImages || _cleanupComparisonImages;
 
@@ -128,7 +133,7 @@ function getResemblePath( root ) {
 	if(root){
 		path = [ root, 'node_modules', 'resemblejs', 'resemble.js' ].join( fs.separator );
 		if ( !_isFile( path ) ) {
-            path = [ root, '..', 'resemblejs', 'resemble.js' ].join( fs.separator );
+			path = [ root, '..', 'resemblejs', 'resemble.js' ].join( fs.separator );
 		}
 	} else {
 		require('resemblejs');
@@ -140,9 +145,9 @@ function getResemblePath( root ) {
 		}
 	}
 
-            if ( !_isFile( path ) ) {
-    			throw "[PhantomCSS] Resemble.js not found: " + path;
-            }
+	if ( !_isFile( path ) ) {
+		throw "[PhantomCSS] Resemble.js not found: " + path;
+	}
 
     return path;
 }
@@ -164,9 +169,9 @@ function getResembleContainerPath(root) {
 
     if ( !_isFile(path) ) {
         throw '[PhantomCSS] Can\'t find Resemble container. (' + path + ')';
-	}
+    }
 
-	return path;
+    return path;
 }
 
 function turnOffAnimations() {
@@ -315,11 +320,7 @@ function capture( srcPath, resultPath, target ) {
 		}
 
 	} catch ( ex ) {
-		_onScreenshotCaptureFailed(
-			{
-				filename: resultPath
-			},
-			ex.message);
+		_onScreenshotCaptureFailed(ex, target);
 	}
 }
 
@@ -408,15 +409,15 @@ function getDiffs( root, collection ) {
 		collection.push( root );
 	}
 	return collection;
-	}
+}
 
 function filterOn(include, exclude){
 	return function(path){
 		var includeAble = (include === void 0) || include.test( path.toLowerCase() );
 		var excludeAble = exclude && exclude.test( path.toLowerCase() );
 		return !excludeAble && includeAble;
-				}
-			}
+	}
+}
 
 function getCreatedDiffFiles() {
 	var d = diffsCreated;
@@ -481,7 +482,6 @@ function compareFiles( baseFile, file ) {
 								casper.captureSelector( failFile, 'img' );
 
 								test.failFile = failFile;
-								console.log( 'Failure! Saved to ' + failFile );
 							}
 
 							if ( file.indexOf( _diffImageSuffix + '.png' ) !== -1 ) {
@@ -618,16 +618,17 @@ function initClient() {
 				ignoreAntialiasing(). // <-- muy importante
 				onComplete( function ( data ) {
 					var diffImage;
+					var misMatchPercentage = mismatchTolerance < 0.01 ? data.rawMisMatchPercentage : data.misMatchPercentage;
 
-					if ( Number( data.misMatchPercentage ) > mismatchTolerance ) {
-						result = data.misMatchPercentage;
+					if ( Number( misMatchPercentage ) > mismatchTolerance ) {
+						result = misMatchPercentage;
 					} else {
 						result = false;
 					}
 
 					window._imagediff_.hasResult = true;
 
-					if ( Number( data.misMatchPercentage ) > mismatchTolerance ) {
+					if ( Number( misMatchPercentage ) > mismatchTolerance ) {
 						render( data );
 					}
 
@@ -641,12 +642,14 @@ function initClient() {
 
 function _onPass( test ) {
 	console.log( '\n' );
-	casper.test.pass( 'No changes found for screenshot ' + test.filename );
+	var name = 'Should look the same ' + test.filename;
+	casper.test.pass(name, {name: name});
 }
 
 function _onFail( test ) {
-	console.log( '\n' );
-	casper.test.fail( 'Visual change found for screenshot ' + test.filename + ' (' + test.mismatch + '% mismatch)' );
+	console.log('\n');
+	var name = 'Should look the same ' + test.filename;
+	casper.test.fail(name, {name:name, message: 'Looks different (' + test.mismatch + '% mismatch) ' + test.failFile });
 }
 
 function _onTimeout( test ) {
@@ -659,9 +662,12 @@ function _onNewImage( test ) {
 	casper.test.info( 'New screenshot at ' + test.filename );
 }
 
-function _onScreenshotCaptureFailed( test, msg ) {
-	console.log( '\n' );
-	casper.test.info( 'Screenshot capture failed: ' + msg );
+function _onScreenshotCaptureFailed( ex, target ) {
+	console.log("[PhantomCSS] Screenshot capture failed: " + ex.message);
+	if (_failOnCaptureError) {
+		var name = 'Capture screenshot ' + target;
+		casper.test.fail(name, {name: name, message: 'Failed to capture ' + target + ' - ' + ex.message});
+	}
 }
 
 function _onComplete( tests, noOfFails, noOfErrors ) {
@@ -697,8 +703,8 @@ function _onComplete( tests, noOfFails, noOfErrors ) {
 }
 
 function waitAndHideToCapture( target, fileName, hideSelector, timeToWait ) {
-		var srcPath = _fileNameGetter( _src, fileName );
-		var resultPath = srcPath.replace( _src, _results );
+	var srcPath = _fileNameGetter( _src, fileName );
+	var resultPath = srcPath.replace( _src, _results );
 
 	function runCapture() {
 		if ( hideSelector || _hideElements ) {

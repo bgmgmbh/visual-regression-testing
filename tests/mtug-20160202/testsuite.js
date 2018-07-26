@@ -50,6 +50,7 @@ var _diffImageSuffix = ".diff";
 var _failImageSuffix = ".fail";
 var _addLabelToFailedImage = false;
 var _timeout = 30000;
+var _failOnCaptureError = true;
 
 //Get CLI parameters
 var _baseUrl = casper.cli.get('baseUrl') ? casper.cli.get('baseUrl') : '/';
@@ -144,7 +145,8 @@ casper.test.begin(_testsuiteTitle + ' tests for "' + _baseUrl + _url + '"', func
 			fs.write(_passedComparisonsLog, content, 'a');
 
 			console.log('\n');
-			casper.test.pass('No changes found for screenshot ' + test.filename);
+			var name = 'Should look the same ' + test.filename;
+			casper.test.pass(name, {name: name});
 		},
 		onFail: function onFail (test) {
 			var content = '';
@@ -157,7 +159,11 @@ casper.test.begin(_testsuiteTitle + ' tests for "' + _baseUrl + _url + '"', func
 			fs.write(_failedComparisonsLog, content, 'a');
 
 			console.log('\n');
-			casper.test.fail('Visual change found for screenshot ' + test.filename + ' (' + test.mismatch + '% mismatch)');
+			var name = 'Should look the same ' + test.filename;
+			casper.test.fail(name, {
+				name: name,
+				message: 'Looks different (' + test.mismatch + '% mismatch) ' + test.failFile
+			});
 		},
 		onTimeout: function onTimeout (test) {
 			var content = '';
@@ -185,18 +191,21 @@ casper.test.begin(_testsuiteTitle + ' tests for "' + _baseUrl + _url + '"', func
 			console.log('\n');
 			casper.test.info('New screenshot at ' + test.filename);
 		},
-		onScreenshotCaptureFailed: function onScreenshotCaptureFailed (test, msg) {
+		onScreenshotCaptureFailed: function onScreenshotCaptureFailed (ex, target) {
 			var content = '';
 			if (fs.isFile(_screenshotCaptureFailedLog)) {
 				content += "\n";
 			} else {
 				fs.touch(_screenshotCaptureFailedLog);
 			}
-			content += _baseUrl + _url + '|' + msg;
+			content += _baseUrl + _url + '|' + ex.message;
 			fs.write(_screenshotCaptureFailedLog, content, 'a');
 
-			console.log('\n');
-			casper.test.info('Screenshot capture failed: ' + msg);
+			console.log("[PhantomCSS] Screenshot capture failed: " + ex.message);
+			if (_failOnCaptureError) {
+				var name = 'Capture screenshot ' + target;
+				casper.test.fail(name, {name: name, message: 'Failed to capture ' + target + ' - ' + ex.message});
+			}
 		}
 	});
 
